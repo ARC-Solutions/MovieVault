@@ -6,7 +6,21 @@ const swaggerUi = require("swagger-ui-express");
 const app = express();
 app.use(express.json());
 
-const swaggerApp = require('./swaggerHub_DOCUMENTATION');
+// Swagger options
+const swaggerOptions = {
+    swaggerDefinition: {
+        info: {
+            title: "Movie Vault API",
+            version: "1.0.0",
+            description: "API for accessing and managing a collection of movies.",
+        }
+    },
+    apis: ["server.js"],
+};
+
+// Initialize Swagger
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 /**
  * @swagger
@@ -119,11 +133,6 @@ app.delete("/movies/:id", async (req, res) => {
     });
     res.json(movie);
 });
-
-// Swagger UI
-const swaggerDocs = swaggerJsDoc(swaggerApp);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
 
 // Start server
 const port = process.env.PORT || 3000;
