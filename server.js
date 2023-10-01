@@ -12,7 +12,7 @@ const swaggerOptions = {
         info: {
             title: "Movie Vault API",
             version: "1.0.0",
-            description: "API for accessing and managing a collection of movies.",
+            description: "API for accessing and managing a collection of movies. \n Created by ARC-Solutions",
         }
     },
     apis: ["server.js"],
