@@ -48,3 +48,6 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
+
+// Debug DB URL
+console.log("Debugging DATABASE_URL:", process.env.DATABASE_URL);
