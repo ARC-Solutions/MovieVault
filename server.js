@@ -1,5 +1,7 @@
 const express = require('express');
 const prisma = require('./prismaClient');
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
 const app = express();
 app.use(express.json());
@@ -117,6 +119,11 @@ app.delete("/movies/:id", async (req, res) => {
     });
     res.json(movie);
 });
+
+// Swagger UI
+const swaggerDocs = swaggerJsDoc(swaggerApp);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 
 // Start server
 const port = process.env.PORT || 3000;
