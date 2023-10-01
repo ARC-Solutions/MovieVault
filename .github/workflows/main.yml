@@ -24,3 +24,5 @@ jobs:
         package: .
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    - name: 'Debug: Echo DATABASE_URL'
+      run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}"
