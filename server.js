@@ -92,10 +92,13 @@ app.get("/movies/:id", async (req, res) => {
  *            properties:
  *              title:
  *                type: string
+ *                example: "New Movie Title"
  *              director:
  *                type: string
+ *                example: "New Director Name"
  *              rating:
  *                type: number
+ *                example: 8.5
  *    responses:
  *      200:
  *        description: Returns the newly created movie.
