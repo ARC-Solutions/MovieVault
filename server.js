@@ -79,6 +79,45 @@ app.get("/movies/:id", async (req, res) => {
 
 /**
  * @swagger
+ * /movies:
+ *  post:
+ *    summary: Create a new movie
+ *    tags: [Movies]
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              title:
+ *                type: string
+ *              director:
+ *                type: string
+ *              rating:
+ *                type: number
+ *    responses:
+ *      200:
+ *        description: Returns the newly created movie.
+ */
+app.post("/movies", [
+    check('title').isString().notEmpty(),
+    check('director').isString().notEmpty(),
+    check('rating').isFloat({ min: 0, max: 10}).notEmpty(),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(400).json({ errors: errors.array() });
+    }
+    const { title, director, rating } = req.body;
+    const movie = await prisma.movie.create({
+        data: { title, director, rating },
+    });
+    res.json(movie);
+});
+
+/**
+ * @swagger
  * /movies/{id}:
  *  put:
  *    summary: Update a movie by ID
@@ -119,45 +158,6 @@ app.put("/movies/:id", [
     const movie = await prisma.movie.update({
         where: { id: Number(id) },
         data: { title, director, rating },
-    });
-    res.json(movie);
-});
-
-/**
- * @swagger
- * /movies:
- *  post:
- *    summary: Create a new movie
- *    tags: [Movies]
- *    requestBody:
- *      required: true
- *      content:
- *        application/json:
- *          schema:
- *            type: object
- *            properties:
- *              title:
- *                type: string
- *              director:
- *                type: string
- *              rating:
- *                type: number
- *    responses:
- *      200:
- *        description: Returns the newly created movie.
- */
-app.post("/movies", [
-    check('title').isString().notEmpty(),
-    check('director').isString().notEmpty(),
-    check('rating').isFloat({ min: 0, max: 10}).notEmpty(),
-], async (req, res) => {
-    const errors = validationResult(req);
-    if(!errors.isEmpty()){
-        return res.status(400).json({ errors: errors.array() });
-    }
-    const { title, director, rating } = req.body;
-    const movie = await prisma.movie.create({
-       data: { title, director, rating },
     });
     res.json(movie);
 });
