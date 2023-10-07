@@ -1,7 +1,11 @@
+if(process.env.NODE_ENV !== 'production'){
+    require('dotenv').config();
+}
 const express = require('express');
 const prisma = require('./prismaClient');
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
+const { check, validationResult } = require('express-validator');
 
 const app = express();
 app.use(express.json());
@@ -101,7 +105,15 @@ app.get("/movies/:id", async (req, res) => {
  *      200:
  *        description: Returns the updated movie.
  */
-app.put("/movies/:id", async (req, res) => {
+app.put("/movies/:id", [
+    check('title').isString().notEmpty(),
+    check('director').isString().notEmpty(),
+    check('rating').isFloat({ min: 0, max: 10}).notEmpty(),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(400).json({ errors: errors.array() });
+    }
     const { id } = req.params;
     const { title, director, rating } = req.body;
     const movie = await prisma.movie.update({
