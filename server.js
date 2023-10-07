@@ -15,7 +15,7 @@ const swaggerOptions = {
     swaggerDefinition: {
         info: {
             title: "Movie Vault API",
-            version: "1.1.0",
+            version: "1.1.1",
             description: "API for accessing and managing a collection of movies. \n Created by ARC-Solutions",
         }
     },
@@ -125,6 +125,45 @@ app.put("/movies/:id", [
 
 /**
  * @swagger
+ * /movies:
+ *  post:
+ *    summary: Create a new movie
+ *    tags: [Movies]
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              title:
+ *                type: string
+ *              director:
+ *                type: string
+ *              rating:
+ *                type: number
+ *    responses:
+ *      200:
+ *        description: Returns the newly created movie.
+ */
+app.post("/movies", [
+    check('title').isString().notEmpty(),
+    check('director').isString().notEmpty(),
+    check('rating').isFloat({ min: 0, max: 10}).notEmpty(),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(400).json({ errors: errors.array() });
+    }
+    const { title, director, rating } = req.body;
+    const movie = await prisma.movie.create({
+       data: { title, director, rating },
+    });
+    res.json(movie);
+});
+
+/**
+ * @swagger
  * /movies/{id}:
  *  delete:
  *    summary: Delete a movie by ID
@@ -144,6 +183,12 @@ app.delete("/movies/:id", async (req, res) => {
         where: { id: Number(id) },
     });
     res.json(movie);
+});
+
+// Central error handler for middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
 });
 
 // Start server
