@@ -26,6 +26,9 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
+app.get('/', (req, res) => {
+    res.send('Welcome to the Movies API!')
+});
 /**
  * @swagger
  * /:
@@ -35,10 +38,11 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
  *      200:
  *        description: Returns a welcome message.
  */
-app.get('/', (req, res) => {
-    res.send('Welcome to the Movies API!')
-});
 
+app.get('/movies', async (req, res) => {
+   const movies = await prisma.movie.findMany();
+   res.json(movies);
+});
 /**
  * @swagger
  * /movies:
@@ -49,11 +53,14 @@ app.get('/', (req, res) => {
  *      200:
  *        description: Returns a list of all movies.
  */
-app.get('/movies', async (req, res) => {
-   const movies = await prisma.movie.findMany();
-   res.json(movies);
-});
 
+app.get("/movies/:id", async (req, res) => {
+    const { id } = req.params;
+    const movie = await prisma.movie.findUnique({
+        where: { id: Number(id) },
+    });
+    res.json(movie);
+});
 /**
  * @swagger
  * /movies/{id}:
@@ -69,14 +76,22 @@ app.get('/movies', async (req, res) => {
  *      200:
  *        description: Returns the movie with the specified ID.
  */
-app.get("/movies/:id", async (req, res) => {
-    const { id } = req.params;
-    const movie = await prisma.movie.findUnique({
-        where: { id: Number(id) },
+
+app.post("/movies", [
+    check('title').isString().notEmpty(),
+    check('director').isString().notEmpty(),
+    check('rating').isFloat({ min: 0, max: 10}).notEmpty(),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(400).json({ errors: errors.array() });
+    }
+    const { title, director, rating } = req.body;
+    const movie = await prisma.movie.create({
+        data: { title, director, rating },
     });
     res.json(movie);
 });
-
 /**
  * @swagger
  * /movies:
@@ -103,7 +118,8 @@ app.get("/movies/:id", async (req, res) => {
  *      200:
  *        description: Returns the newly created movie.
  */
-app.post("/movies", [
+
+app.put("/movies/:id", [
     check('title').isString().notEmpty(),
     check('director').isString().notEmpty(),
     check('rating').isFloat({ min: 0, max: 10}).notEmpty(),
@@ -112,13 +128,14 @@ app.post("/movies", [
     if(!errors.isEmpty()){
         return res.status(400).json({ errors: errors.array() });
     }
+    const { id } = req.params;
     const { title, director, rating } = req.body;
-    const movie = await prisma.movie.create({
+    const movie = await prisma.movie.update({
+        where: { id: Number(id) },
         data: { title, director, rating },
     });
     res.json(movie);
 });
-
 /**
  * @swagger
  * /movies/{id}:
@@ -147,24 +164,14 @@ app.post("/movies", [
  *      200:
  *        description: Returns the updated movie.
  */
-app.put("/movies/:id", [
-    check('title').isString().notEmpty(),
-    check('director').isString().notEmpty(),
-    check('rating').isFloat({ min: 0, max: 10}).notEmpty(),
-], async (req, res) => {
-    const errors = validationResult(req);
-    if(!errors.isEmpty()){
-        return res.status(400).json({ errors: errors.array() });
-    }
+
+app.delete("/movies/:id", async (req, res) => {
     const { id } = req.params;
-    const { title, director, rating } = req.body;
-    const movie = await prisma.movie.update({
+    const movie = await prisma.movie.delete({
         where: { id: Number(id) },
-        data: { title, director, rating },
     });
     res.json(movie);
 });
-
 /**
  * @swagger
  * /movies/{id}:
@@ -180,13 +187,6 @@ app.put("/movies/:id", [
  *      200:
  *        description: Returns the deleted movie.
  */
-app.delete("/movies/:id", async (req, res) => {
-    const { id } = req.params;
-    const movie = await prisma.movie.delete({
-        where: { id: Number(id) },
-    });
-    res.json(movie);
-});
 
 // Central error handler for middleware
 app.use((err, req, res, next) => {
