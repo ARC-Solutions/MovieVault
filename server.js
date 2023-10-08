@@ -15,7 +15,7 @@ const swaggerOptions = {
     swaggerDefinition: {
         info: {
             title: "Movie Vault API",
-            version: "1.1.1",
+            version: "1.1.2",
             description: "API for accessing and managing a collection of movies. \n Created by ARC-Solutions",
         }
     },
@@ -221,7 +221,7 @@ app.delete("/movies/:id", async (req, res) => {
  */
 
 // Central error handler for middleware
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
     console.error(err.stack);
     res.status(500).send('Something broke!');
 });
