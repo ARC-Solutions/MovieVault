@@ -94,29 +94,61 @@ app.post("/movies", [
 });
 /**
  * @swagger
- * /movies:
- *  post:
- *    summary: Create a new movie
- *    tags: [Movies]
- *    requestBody:
- *      required: true
- *      content:
- *        application/json:
- *          schema:
- *            type: object
- *            properties:
- *              title:
- *                type: string
- *                example: "New Movie Title"
- *              director:
- *                type: string
- *                example: "New Director Name"
- *              rating:
- *                type: number
- *                example: 8.5
- *    responses:
- *      200:
- *        description: Returns the newly created movie.
+ * paths:
+ *   /movies:
+ *     post:
+ *       tags:
+ *         - Movies
+ *       summary: 'Create a new movie'
+ *       description: 'This endpoint creates a new movie with the provided title, director, and rating.'
+ *       operationId: 'createMovie'
+ *       consumes:
+ *         - 'application/json'
+ *       produces:
+ *         - 'application/json'
+ *       parameters:
+ *         - in: 'body'
+ *           name: 'body'
+ *           description: 'Movie object that needs to be added to the database'
+ *           required: true
+ *           schema:
+ *             type: 'object'
+ *             properties:
+ *               title:
+ *                 type: 'string'
+ *                 description: 'The title of the movie'
+ *               director:
+ *                 type: 'string'
+ *                 description: 'The director of the movie'
+ *               rating:
+ *                 type: 'number'
+ *                 format: 'float'
+ *                 description: 'The rating of the movie (0-10)'
+ *             example:
+ *               title: 'validationTest'
+ *               director: 'New Director Name'
+ *               rating: 10
+ *       responses:
+ *         200:
+ *           description: 'Movie created successfully'
+ *           schema:
+ *             $ref: '#/definitions/Movie'
+ *         400:
+ *           description: 'Invalid input, object invalid'
+ * definitions:
+ *   Movie:
+ *     type: 'object'
+ *     properties:
+ *       id:
+ *         type: 'integer'
+ *         format: 'int64'
+ *       title:
+ *         type: 'string'
+ *       director:
+ *         type: 'string'
+ *       rating:
+ *         type: 'number'
+ *         format: 'float'
  */
 
 app.put("/movies/:id", [
