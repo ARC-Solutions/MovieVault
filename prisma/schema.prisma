@@ -11,14 +11,23 @@ datasource db {
 }
 
 model Movie {
-  id Int @id @default(autoincrement())
-  title String
-  director String
-  rating Float
+  id          Int    @id @default(autoincrement())
+  title       String
+  director    String
+  rating      Float
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  createdBy   User?   @relation(name: "CreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?   @relation(name: "UpdatedBy", fields: [updatedById], references: [id])
+  deletedBy   User?   @relation(name: "DeletedBy", fields: [deletedById], references: [id])
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  username String @unique
-  password String
+  id          Int      @id @default(autoincrement())
+  username    String   @unique
+  password    String
+  createdMovies Movie[] @relation(name: "CreatedBy")
+  updatedMovies Movie[] @relation(name: "UpdatedBy")
+  deletedMovies Movie[] @relation(name: "DeletedBy")
 }

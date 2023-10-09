@@ -18,7 +18,7 @@ const swaggerOptions = {
     swaggerDefinition: {
         info: {
             title: "Movie Vault API",
-            version: "2.0.3",
+            version: "2.1.3",
             description: "API for accessing and managing a collection of movies. \n Created by ARC-Solutions \n Authorization: Bearer <YOUR_ACCESS_TOKEN>",
         },
         securityDefinitions: {
@@ -270,10 +270,13 @@ app.get("/movies/:id", authenticateJWT, async (req, res) => {
  *             properties:
  *               title:
  *                 type: 'string'
+ *                 description: 'Title of the movie'
  *               director:
  *                 type: 'string'
+ *                 description: 'Director of the movie'
  *               rating:
  *                 type: 'number'
+ *                 description: 'Rating of the movie (between 0 and 10)'
  *       responses:
  *         200:
  *           description: 'Movie created'
@@ -285,17 +288,28 @@ app.get("/movies/:id", authenticateJWT, async (req, res) => {
 app.post("/movies", [
     check('title').isString().notEmpty(),
     check('director').isString().notEmpty(),
-    check('rating').isFloat({ min: 0, max: 10}).notEmpty(),
+    check('rating').isFloat({ min: 0, max: 10 }).notEmpty(),
 ], authenticateJWT, async (req, res) => {
     const errors = validationResult(req);
-    if(!errors.isEmpty()){
+    if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
     const { title, director, rating } = req.body;
-    const movie = await prisma.movie.create({
-        data: { title, director, rating },
-    });
-    res.json(movie);
+    const userId = req.user.id;
+    try {
+        const movie = await prisma.movie.create({
+            data: {
+                title,
+                director,
+                rating,
+                createdBy: { connect: { id: userId } },
+            },
+        });
+        res.json(movie);
+    } catch (error) {
+        console.log(`Error creating movie: ${error}`);
+        res.status(500).json("Error creating movie");
+    }
 });
 
 /**
@@ -345,11 +359,23 @@ app.put("/movies/:id", [
     }
     const { id } = req.params;
     const { title, director, rating } = req.body;
-    const movie = await prisma.movie.update({
-        where: { id: Number(id) },
-        data: { title, director, rating },
-    });
-    res.json(movie);
+    const userId = req.user.id;
+
+    try {
+        const movie = await prisma.movie.update({
+            where: { id: Number(id) },
+            data: {
+                title,
+                director,
+                rating,
+                updatedBy: { connect: { id: userId } },
+            },
+        });
+        res.json(movie);
+    } catch (error){
+        console.log(`Error updating movie: ${error}`);
+        res.status(500).json("Error updating movie");
+    }
 });
 
 /**
@@ -376,11 +402,33 @@ app.put("/movies/:id", [
  */
 app.delete("/movies/:id", authenticateJWT, async (req, res) => {
     const { id } = req.params;
-    const movie = await prisma.movie.delete({
-        where: { id: Number(id) },
-    });
-    res.json(movie);
+    const userId = req.user.id;
+
+    try {
+        // Check if the movie exists and was created by the authenticated user
+        const existingMovie = await prisma.movie.findFirst({
+            where: {
+                id: Number(id),
+                createdBy: { id: userId },
+            },
+        });
+
+        if (!existingMovie) {
+            return res.status(404).json("Movie not found or unauthorized");
+        }
+        const deletedMovie = await prisma.movie.delete({
+            where: {
+                id: Number(id),
+            },
+        });
+
+        res.json(deletedMovie);
+    } catch (error) {
+        console.log(`Error deleting movie: ${error}`);
+        res.status(500).json("Error deleting movie");
+    }
 });
+
 
 // Central error handler for middleware
 app.use((err, req, res, next) => {
